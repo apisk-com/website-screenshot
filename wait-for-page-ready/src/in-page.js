@@ -33,11 +33,8 @@ export async function waitForFontsAndImages({ timeoutMs, wholePage }) {
   const untilTimeout = (promise) => Promise.race([promise, sleep(Math.max(0, end - Date.now()))]);
   const problems = [];
 
-  // Two animation frames: style and layout run, so the browser knows which
-  // fonts the text needs. document.fonts.ready does not wait for a font
-  // that the browser did not start to load.
-  const twoFrames = new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  await untilTimeout(Promise.race([twoFrames, sleep(200)]));
+  // Call this after the app put its content on the page: text that the app
+  // adds later can need a font file that is not loaded yet.
   await untilTimeout(document.fonts.ready);
   for (const font of document.fonts) {
     if (font.status === 'loading') problems.push(`font not loaded: ${font.family}`);

@@ -40,7 +40,7 @@ npm run test-page
 Take a screenshot of it in a second terminal:
 
 ```bash
-node shoot.js "http://127.0.0.1:8080/?live=poll" dashboard.png --ready-global __READY__
+node shoot.js http://127.0.0.1:8080/ dashboard.png --ready-global __READY__
 ```
 
 The script prints the wait time and the warnings, and writes a PNG of 1280 x 800 pixels:
@@ -54,6 +54,7 @@ Other forms:
 
 | Command | Result |
 |---|---|
+| `node shoot.js "http://127.0.0.1:8080/?live=poll" dashboard.png --ready-global __READY__` | The same page with a request that never ends |
 | `node shoot.js <url> dashboard.pdf --ready-global __READY__` | An A4 PDF file |
 | `node shoot.js <url> dashboard.png --ready-selector "#chart .bar"` | Waits for an element instead of a global flag |
 | `node shoot.js <url> dashboard.png` | No ready signal: waits at most 3 s for network idle |

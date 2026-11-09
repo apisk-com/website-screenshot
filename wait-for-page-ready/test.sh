@@ -20,9 +20,11 @@ npm run test-page > out/test-page.log 2>&1 &
 server_pid=$!
 trap 'pkill -P "$server_pid" 2> /dev/null || true; kill "$server_pid" 2> /dev/null || true' EXIT
 sleep 2
-node shoot.js "http://127.0.0.1:8080/?live=poll" dashboard.png --ready-global __READY__ | tee out/shoot.log
+node shoot.js http://127.0.0.1:8080/ dashboard.png --ready-global __READY__ | tee out/shoot.log
 grep -q 'Warnings: none' out/shoot.log
 file dashboard.png | grep -q 'PNG image data, 1280 x 800'
+node shoot.js "http://127.0.0.1:8080/?live=poll" dashboard.png --ready-global __READY__ | tee out/shoot.log
+grep -q 'Warnings: none' out/shoot.log
 node shoot.js "http://127.0.0.1:8080/?live=poll" dashboard.pdf --ready-global __READY__
 head -c 5 dashboard.pdf | grep -q '%PDF-'
 pdffonts dashboard.pdf | grep -q DMSerifDisplay
