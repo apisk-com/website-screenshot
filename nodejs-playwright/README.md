@@ -95,7 +95,7 @@ npm test
 ```
 
 The tests start Chromium, a local test page server and the service, and
-check real images. `test.sh` is the CI script: it also builds the Docker
+check real images. `test.sh` is the full test script: it also builds the Docker
 image and sends requests to the container.
 
 ## Docker
