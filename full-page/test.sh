@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CI entry point: install, run the tests, run the script once, print the limits.
+# Install, run the tests, run the script once, print the limits.
 set -euo pipefail
 cd "$(dirname "$0")"
 

@@ -1,9 +1,11 @@
 # Full-page screenshots: lazy images, fixed overlays, tall pages
 
 Code that takes a correct full-page screenshot with Playwright or Puppeteer. It
-scrolls the page so that lazy images load, waits until the images are decoded,
-hides cookie banners and chat buttons, stops on a feed without an end, and
-captures a tall page in tiles that Chrome can draw. A local test page has all
+scrolls the page (or its inner scroll container) so that lazy images load, waits
+until the images are decoded, hides cookie banners, consent walls and chat
+buttons, also in shadow roots and iframes, stops on a feed without an end, and
+captures a tall page in tiles that Chrome can draw. It does not use a style
+element, so a strict Content Security Policy does not stop it. A local test page has all
 these problems. The tutorial explains each step:
 [Full-Page Screenshots: Lazy Images, Sticky Headers, Banners](https://apisk.com/blog/full-page-screenshot/).
 
@@ -40,7 +42,7 @@ node shoot.js http://127.0.0.1:8080/ page.png --join
 ```
 
 The script prints the page height, the number of scroll steps and the number of
-hidden fixed elements. It writes one PNG of 1280 x 30000 pixels: the test page
+hidden overlays. It writes one PNG of 1280 x 30000 pixels: the test page
 has a feed without an end, so the capture stops at 30,000 CSS pixels.
 
 Other forms:
@@ -56,11 +58,24 @@ The script accepts only `http://` and `https://` URLs. It does not block private
 network addresses. If other people can send it a URL, add SSRF protection
 (SSRF: server-side request forgery).
 
+## Options of captureFullPage
+
+| Option | Default | What it does |
+|---|---|---|
+| `type`, `quality` | `png` | Image format and quality |
+| `maxHeight` | 30000 | Highest point in CSS pixels where the scroll and the image stop |
+| `stepDelayMs` | 100 | Wait after each scroll step |
+| `imageTimeoutMs` | 5000 | Longest wait for images |
+| `bannerWaitMs` | 2000 | How long to look for banners that come late |
+| `acceptConsent` | false | Click "accept", but only inside an overlay |
+| `hide` | none | More CSS selectors to hide |
+
 ## Files
 
 | File | What it does |
 |---|---|
-| `src/in-page.js` | Functions that run in the page: scroll, wait for images, mark fixed elements |
+| `src/in-page.js` | Functions that run in the page: scroll, wait for images, hide overlays, click accept |
+| `src/prepare.js` | The steps before the capture, for both libraries |
 | `src/capture.js` | `captureFullPage(page, options)` for Playwright |
 | `src/capture-puppeteer.js` | The same for Puppeteer |
 | `src/join-tiles.js` | Joins the tiles into one PNG with sharp |
@@ -68,7 +83,7 @@ network addresses. If other people can send it a URL, add SSRF protection
 | `limits.js` | Measures the largest screenshot that each browser build draws correctly |
 | `test-page/` | The test page and its server |
 | `test/` | Tests (`node --test`) |
-| `test.sh` | The script that GitHub Actions runs |
+| `test.sh` | Installs, runs the tests and the script once, and prints the limits |
 
 ## Test
 
@@ -76,8 +91,10 @@ network addresses. If other people can send it a URL, add SSRF protection
 npm test
 ```
 
-The tests take real screenshots of the test page and check pixel colors: the
-photos, the hidden banner, the header at the top, and the tile sizes.
+The tests take real screenshots of the test pages and check pixel colors: the
+photos, the hidden banner, the header at the top, and the tile sizes. Small
+pages test a scroll lock, a late banner, an inner scroller, a shadow root, an
+iframe, a click on "accept" and a strict Content Security Policy.
 
 Print the screenshot limits of your browser builds:
 

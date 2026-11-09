@@ -32,7 +32,10 @@ const browser = await chromium.launch({ chromiumSandbox: true });
 try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+  // 'load' never comes on some pages (a request that does not end). Wait for the
+  // HTML, then at most 5 seconds for the network to go idle, and go on.
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
 
   if (values.naive) {
     await writeFile(file, await page.screenshot({ type, fullPage: true }));
@@ -40,8 +43,8 @@ try {
   } else {
     const result = await captureFullPage(page, { type });
     console.log(`Page: ${result.height} px${result.cut ? ' (cut at maxHeight)' : ''}, ` +
-      `${result.steps} scroll steps, ${result.hidden} fixed elements hidden, ` +
-      `${result.notReady} images not ready.`);
+      `${result.steps} scroll steps${result.innerScroller ? ' (inner scroller)' : ''}, ` +
+      `${result.hidden} overlays hidden, ${result.notReady} images not ready.`);
 
     const names = result.tiles.length === 1 || values.join
       ? [file]
