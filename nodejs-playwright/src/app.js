@@ -39,6 +39,10 @@ export function createApp({ apiKey = process.env.API_KEY, storage = createStorag
     if (error.message?.includes('net::ERR_')) {
       return res.status(502).json({ error: 'The page could not be loaded.' });
     }
+    // The page answered 4xx or 5xx, for example 403 from a bot block.
+    if (error.targetStatus) {
+      return res.status(502).json({ error: error.message, targetStatus: error.targetStatus });
+    }
     if (!error.expose) {
       console.error(error);
     }

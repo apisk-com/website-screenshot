@@ -6,6 +6,7 @@ import { startTestPageServer } from './test-page-server.js';
 
 // Short limits, so that the timeout and busy tests run fast. Set them before the import.
 process.env.RENDER_TIMEOUT_MS = '2000';
+process.env.NETWORK_IDLE_TIMEOUT_MS = '500';
 process.env.MAX_OPEN_CONTEXTS = '1';
 const { createApp } = await import('../src/app.js');
 const { closeBrowser } = await import('../src/render.js');
@@ -102,6 +103,26 @@ test('answers 401 without the right API key', async () => {
 test('answers 502 when the page cannot be loaded', async () => {
   const response = await shoot({ url: 'http://127.0.0.1:1/' });
   assert.equal(response.status, 502);
+});
+
+test('answers 502 with the status of the page when the page answers 403', async () => {
+  const response = await shoot({ url: `${pagesUrl}/blocked` });
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: 'The page answered with status 403.', targetStatus: 403 });
+});
+
+test('answers 502 when a script sends the page to Chrome\'s error page', async () => {
+  const response = await shoot({ url: `${pagesUrl}/goes-away` });
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: 'The page could not be loaded.' });
+});
+
+test('returns a screenshot of a page whose load event never fires', async () => {
+  const start = Date.now();
+  const png = await readImage(await shoot({ url: `${pagesUrl}/never-loads` }), 'image/png');
+  // The network idle wait stops after 500 ms, long before RENDER_TIMEOUT_MS (2000 ms).
+  assert.ok(Date.now() - start < 2000, `took ${Date.now() - start} ms`);
+  assert.deepEqual(sizeOf(png), [1280, 800]);
 });
 
 test('answers 504 when the page is too slow', async () => {

@@ -62,7 +62,12 @@ curl -H "Authorization: Bearer change-me" -o preview.webp "http://localhost:3000
 
 Answers: 200 with the image, 201 with `{ "bucket", "key" }` for `store=true`,
 400 for bad input, 401 for a missing or wrong key, 502 when the page does not
-load, 503 when too many screenshots run, 504 when the page is too slow.
+load or answers with status 400 or higher, 503 when too many screenshots run,
+504 when the page is too slow. For a page that answers 403, the body is
+`{ "error": "The page answered with status 403.", "targetStatus": 403 }`.
+
+The service waits for `DOMContentLoaded`, then at most 5 seconds until the
+network is idle. A page that never stops loading still gets its screenshot.
 
 The service accepts only `http:` and `https:` URLs, but it does not block
 private network addresses. Before you open it to other people, add SSRF
@@ -75,6 +80,7 @@ protection (SSRF: server-side request forgery).
 | `PORT` | HTTP port, default 3000 |
 | `API_KEY` | Key that clients send as `Authorization: Bearer <key>` |
 | `RENDER_TIMEOUT_MS` | Time limit for page load and for the screenshot, default 15000 |
+| `NETWORK_IDLE_TIMEOUT_MS` | Longest wait for an idle network after the HTML loads, default 5000 |
 | `MAX_OPEN_CONTEXTS` | Screenshots at the same time, default 4; more get status 503 |
 | `CHROMIUM_SANDBOX` | `false` turns off the Chromium sandbox; use it only for pages you trust |
 | `S3_BUCKET` | Turns on `store=true` and names the bucket |

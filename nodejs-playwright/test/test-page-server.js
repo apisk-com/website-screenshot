@@ -3,6 +3,9 @@
 //   /tall       a page 3000 px high
 //   /very-tall  a page 25000 px high
 //   /slow       never answers
+//   /blocked    answers 403 with an "Access denied" page, like a bot block
+//   /never-loads  a page with an image that never answers: no load event
+//   /goes-away  a script sends the page to an address that does not load
 // Run it alone with: node test/test-page-server.js (port 8080, or PORT)
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -14,6 +17,16 @@ export function startTestPageServer(port = 0) {
   const server = createServer((req, res) => {
     if (req.url === '/slow') return;
     res.setHeader('content-type', 'text/html; charset=utf-8');
+    if (req.url === '/blocked') {
+      res.statusCode = 403;
+      return res.end('<h1>Access denied</h1><p>Your request looks automated.</p>');
+    }
+    if (req.url === '/never-loads') {
+      return res.end('<h1>The load event never fires</h1><img src="/slow" alt="">');
+    }
+    if (req.url === '/goes-away') {
+      return res.end('<p>Moving</p><script>setTimeout(() => { location.href = "http://127.0.0.1:1/"; }, 50);</script>');
+    }
     const height = tallPages[req.url];
     if (height) {
       return res.end(`<body style="margin:0"><div style="height:${height}px;background:#2563eb"></div></body>`);
