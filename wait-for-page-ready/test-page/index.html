@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly sales</title>
+<style>
+  /* The heading font comes from the server after a delay. */
+  @font-face {
+    font-family: 'DM Serif Display';
+    src: url('/fonts/display.woff2') format('woff2');
+    font-display: swap;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.4 system-ui, sans-serif; color: #0f172a; background: #f1f5f9; }
+  header { padding: 28px 40px; background: #0f172a; color: #fff; }
+  /* A fixed height: the font swap does not move the rest of the page. */
+  h1 { margin: 0; height: 64px; overflow: hidden; font: 56px/64px 'DM Serif Display', sans-serif; }
+  main { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; padding: 32px 40px; }
+  .card { height: 460px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+  h2 { margin: 0 0 16px; font-size: 18px; }
+  #chart { position: relative; height: 360px; display: flex; align-items: flex-end; gap: 16px; }
+  .column { flex: 1; text-align: center; }
+  /* Each bar grows from the bottom in 0.8 s. */
+  .bar { background: #2563eb; transform-origin: bottom; animation: grow 0.8s ease-out both; }
+  @keyframes grow { from { transform: scaleY(0); } }
+  .label { margin-top: 8px; color: #475569; font-size: 14px; }
+  .spinner {
+    position: absolute; inset: 0; margin: auto; width: 48px; height: 48px;
+    border: 6px solid #cbd5e1; border-top-color: #64748b; border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .slot { aspect-ratio: 8 / 5; background: #e2e8f0; border-radius: 8px; overflow: hidden; }
+  #photo { display: block; width: 100%; height: 100%; }
+  .name { margin: 16px 0 4px; font-size: 20px; font-weight: 600; }
+  .sold { margin: 0; color: #475569; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Weekly sales</h1>
+</header>
+<main>
+  <section class="card">
+    <h2>Orders per day</h2>
+    <div id="chart"><div class="spinner"></div></div>
+  </section>
+  <section class="card">
+    <h2>Top product</h2>
+    <div id="product"><div class="slot"></div><p class="name">Loading...</p></div>
+  </section>
+</main>
+<script>
+  // The app: it loads the chart data, then draws the chart and the product card.
+  const params = new URLSearchParams(location.search);
+
+  // A connection that stays open, like live updates or a chat widget.
+  if (params.get('live') === 'poll') {
+    (async () => {
+      while (true) {
+        try {
+          await fetch('/api/live');
+        } catch {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+    })();
+  }
+  if (params.get('live') === 'sse') {
+    new EventSource('/api/events');
+  }
+
+  async function start() {
+    const response = await fetch('/api/sales');
+    const data = await response.json();
+    const max = Math.max(...data.days.map((d) => d.value));
+    document.querySelector('#chart').innerHTML = data.days.map((d) => `
+      <div class="column">
+        <div class="bar" style="height: ${Math.round((d.value / max) * 300)}px"></div>
+        <div class="label">${d.day}</div>
+      </div>`).join('');
+
+    const photo = '/img/product.png' + (params.has('hang') ? '?hang=1' : '');
+    document.querySelector('#product').innerHTML = `
+      <div class="slot"><img id="photo" src="${photo}" loading="lazy" width="640" height="400" alt=""></div>
+      <p class="name">${data.product.name}</p>
+      <p class="sold">${data.product.sold} sold this week</p>`;
+
+    // The app tells screenshot tools that its data is on the page.
+    window.__READY__ = true;
+  }
+  start();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "wait-for-page-ready",
+  "version": "1.0.0",
+  "description": "Wait until a page is ready before a screenshot or a PDF: load events, network idle, a ready signal, fonts, images and animations, measured with Puppeteer and Playwright",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test-page": "node test-page/server.js",
+    "bench": "node bench/run.js"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "@fontsource/dm-serif-display": "5.3.0",
+    "pdf-lib": "1.17.1",
+    "playwright": "1.65.0",
+    "puppeteer": "25.16.0",
+    "sharp": "0.35.5"
+  }
+}
