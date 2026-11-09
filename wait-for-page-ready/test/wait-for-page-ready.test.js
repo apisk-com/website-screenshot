@@ -73,6 +73,26 @@ describe('Puppeteer', () => {
     await page.close();
   });
 
+  test("waitUntil: 'load' times out on the page with a tracking pixel that never loads", async () => {
+    const page = await newPage();
+    await assert.rejects(
+      page.goto(`${base}?tracker=1`, { waitUntil: 'load', timeout: 3_000 }),
+      { name: 'TimeoutError' },
+    );
+    await page.close();
+  });
+
+  test('waitForPageReady does not wait for the load event', async () => {
+    const page = await newPage();
+    await page.goto(`${base}?tracker=1`, { waitUntil: 'domcontentloaded' });
+    const { warnings, ms } = await waitForPageReady(page, { readyGlobal: '__READY__' });
+    assert.deepEqual(warnings, []);
+    assert.ok(ms < 5_000, `waited ${ms} ms`);
+    const bars = await barsOnPage(page);
+    assert.deepEqual(await checkScreenshot(await page.screenshot(), ref, bars), []);
+    await page.close();
+  });
+
   test('waitForPageReady with the ready flag gives a correct screenshot', async () => {
     const page = await newPage();
     await page.goto(`${base}?live=poll`, { waitUntil: 'domcontentloaded' });
@@ -156,7 +176,7 @@ describe('Playwright', () => {
     const page = await context.newPage();
     await page.goto(`${base}?live=poll`, { waitUntil: 'domcontentloaded' });
     const { warnings } = await waitForPageReady(page);
-    assert.deepEqual(warnings, ['network not idle after 3000 ms']);
+    assert.deepEqual(warnings, ['network not idle after 5000 ms']);
     const bars = await barsOnPage(page);
     assert.deepEqual(await checkScreenshot(await page.screenshot(), ref, bars), []);
     await context.close();

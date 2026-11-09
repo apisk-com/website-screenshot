@@ -1,12 +1,13 @@
 # Wait until the page is ready before a screenshot or PDF
 
 Code that waits until a web page is ready before Puppeteer or Playwright takes a
-screenshot or makes a PDF. `waitForPageReady(page, options)` waits for the load
-event, a ready signal from the app (or network idle, with a time limit), web
-fonts and images. Then it ends the CSS animations. When a wait fails, it adds a
+screenshot or makes a PDF. `waitForPageReady(page, options)` waits for a ready
+signal from the app (or for network idle, at most 5 s), then for web fonts and
+images. Then it ends the CSS animations. It does not wait for the load event:
+one tracking request that never ends can stop that event. When a wait fails, it adds a
 warning and continues, so you still get an image. A local test page has a slow
 web font, a chart that loads its data with `fetch()`, a lazy image, a CSS
-animation and a request that never ends. A benchmark measures each wait
+animation, and variants with requests that never end. A benchmark measures each wait
 strategy on this page. The tutorial explains each step:
 [Wait Until the Page Is Ready Before a Screenshot or PDF](https://apisk.com/blog/wait-for-page-ready/).
 
@@ -57,7 +58,7 @@ Other forms:
 | `node shoot.js "http://127.0.0.1:8080/?live=poll" dashboard.png --ready-global __READY__` | The same page with a request that never ends |
 | `node shoot.js <url> dashboard.pdf --ready-global __READY__` | An A4 PDF file |
 | `node shoot.js <url> dashboard.png --ready-selector "#chart .bar"` | Waits for an element instead of a global flag |
-| `node shoot.js <url> dashboard.png` | No ready signal: waits at most 3 s for network idle |
+| `node shoot.js <url> dashboard.png` | No ready signal: waits at most 5 s for network idle |
 
 The script accepts only `http://` and `https://` URLs. It does not block private
 network addresses. If other people can send it a URL, add SSRF protection
@@ -72,6 +73,7 @@ network addresses. If other people can send it a URL, add SSRF protection
 | Product photo | A lazy image in the card; sent 1 s after the request |
 | `?live=poll` | Adds a long-poll request that stays open for 25 s, then starts again |
 | `?live=sse` | Adds an `EventSource` stream that stays open |
+| `?tracker=1` | Adds a tracking pixel that never arrives, so the `load` event never fires |
 | `?hang=1` | The product photo never arrives |
 
 The page sets `window.__READY__ = true` when the chart and the product card are in the DOM.
@@ -80,7 +82,7 @@ The page sets `window.__READY__ = true` when the chart and the product card are 
 
 | File | What it does |
 |---|---|
-| `src/in-page.js` | Functions that run in the page: load event, ready signal, fonts, images, animations |
+| `src/in-page.js` | Functions that run in the page: ready signal, fonts, images, animations |
 | `src/wait-for-page-ready.js` | `waitForPageReady(page, options)` for Puppeteer and Playwright |
 | `shoot.js` | Command-line script with Puppeteer: PNG or PDF |
 | `bench/` | The benchmark: the strategies, the pixel checks and the runner |

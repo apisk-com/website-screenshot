@@ -2,18 +2,13 @@
 // Puppeteer page and with a Playwright page. All waits share one time limit.
 // When a wait fails, the function adds a warning and continues, so the caller
 // can still capture the page and report the warnings.
-import {
-  finishAnimations,
-  waitForFontsAndImages,
-  waitForLoadEvent,
-  waitForReadySignal,
-} from './in-page.js';
+import { finishAnimations, waitForFontsAndImages, waitForReadySignal } from './in-page.js';
 
 export async function waitForPageReady(page, {
   readySelector, // CSS selector of an element that the app adds when its data is on the page
   readyGlobal, // name of a window property that the app sets to true, for example '__READY__'
   timeoutMs = 10_000, // the time limit for all waits together
-  idleTimeoutMs = 3_000, // without a ready signal: the longest wait for network idle
+  idleTimeoutMs = 5_000, // without a ready signal: the longest wait for network idle
   wholePage = false, // true: wait for the images of the whole page (full-page screenshot, PDF)
 } = {}) {
   const start = Date.now();
@@ -21,12 +16,9 @@ export async function waitForPageReady(page, {
   const timeLeft = () => Math.max(1, start + timeoutMs - Date.now());
   const warnings = [];
 
-  // 1. The load event: style sheets, scripts and images in the HTML are loaded.
-  if (!(await page.evaluate(waitForLoadEvent, { timeoutMs: timeLeft() }))) {
-    warnings.push('no load event');
-  }
-
-  // 2. The signal of the app. Without one, a short wait for network idle is a guess.
+  // 1. The signal of the app. Without one, a short wait for network idle is a guess.
+  // There is no wait for the load event: one ad or tracking request that never
+  // ends can stop it.
   if (readySelector || readyGlobal) {
     const args = { readySelector, readyGlobal, timeoutMs: timeLeft() };
     if (!(await page.evaluate(waitForReadySignal, args))) warnings.push('no ready signal');
@@ -39,11 +31,11 @@ export async function waitForPageReady(page, {
     }
   }
 
-  // 3. Web fonts and images.
+  // 2. Web fonts and images.
   const args = { timeoutMs: timeLeft(), wholePage };
   warnings.push(...(await page.evaluate(waitForFontsAndImages, args)));
 
-  // 4. Animations: show the end state, not a frame in the middle.
+  // 3. Animations: show the end state, not a frame in the middle.
   await page.evaluate(finishAnimations);
 
   return { warnings, ms: Date.now() - start };

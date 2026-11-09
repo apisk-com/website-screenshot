@@ -70,6 +70,12 @@
   if (params.get('live') === 'sse') {
     new EventSource('/api/events');
   }
+  // A tracking pixel, like the ones of ad and analytics scripts. Its server
+  // never answers, so the load event never fires.
+  if (params.has('tracker')) {
+    document.body.insertAdjacentHTML('beforeend',
+      '<img src="/pixel.gif" width="1" height="1" style="display: none" alt="">');
+  }
 
   async function start() {
     const response = await fetch('/api/sales');

@@ -1,17 +1,19 @@
 // The wait strategies that the benchmark measures. Each one opens the URL and
 // returns when the strategy says that the page is ready.
+// other: true also runs the strategy on the EventSource page and on the page
+// with a tracking pixel that never loads.
 import { waitForPageReady } from '../src/wait-for-page-ready.js';
 
 const READY = '#chart .bar';
 
 export const puppeteerStrategies = [
   { name: "goto, waitUntil: 'domcontentloaded'", run: (page, url) => page.goto(url, { waitUntil: 'domcontentloaded' }) },
-  { name: "goto, waitUntil: 'load'", run: (page, url) => page.goto(url, { waitUntil: 'load' }) },
-  { name: "goto, waitUntil: 'networkidle2'", idle: true, run: (page, url) => page.goto(url, { waitUntil: 'networkidle2' }) },
-  { name: "goto, waitUntil: 'networkidle0'", idle: true, run: (page, url) => page.goto(url, { waitUntil: 'networkidle0' }) },
+  { name: "goto, waitUntil: 'load'", other: true, run: (page, url) => page.goto(url, { waitUntil: 'load' }) },
+  { name: "goto, waitUntil: 'networkidle2'", other: true, run: (page, url) => page.goto(url, { waitUntil: 'networkidle2' }) },
+  { name: "goto, waitUntil: 'networkidle0'", other: true, run: (page, url) => page.goto(url, { waitUntil: 'networkidle0' }) },
   {
     name: "load, then page.waitForNetworkIdle()",
-    idle: true,
+    other: true,
     run: async (page, url) => {
       await page.goto(url, { waitUntil: 'load' });
       await page.waitForNetworkIdle();
@@ -41,6 +43,7 @@ export const puppeteerStrategies = [
   {
     name: "waitForPageReady({ readyGlobal: '__READY__' })",
     helper: true,
+    other: true,
     run: async (page, url) => {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       return waitForPageReady(page, { readyGlobal: '__READY__' });
@@ -49,6 +52,7 @@ export const puppeteerStrategies = [
   {
     name: 'waitForPageReady() without a ready signal',
     helper: true,
+    other: true,
     run: async (page, url) => {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       return waitForPageReady(page);
@@ -58,8 +62,8 @@ export const puppeteerStrategies = [
 
 export const playwrightStrategies = [
   { name: "goto, waitUntil: 'domcontentloaded'", run: (page, url) => page.goto(url, { waitUntil: 'domcontentloaded' }) },
-  { name: "goto, waitUntil: 'load'", run: (page, url) => page.goto(url, { waitUntil: 'load' }) },
-  { name: "goto, waitUntil: 'networkidle'", idle: true, run: (page, url) => page.goto(url, { waitUntil: 'networkidle' }) },
+  { name: "goto, waitUntil: 'load'", other: true, run: (page, url) => page.goto(url, { waitUntil: 'load' }) },
+  { name: "goto, waitUntil: 'networkidle'", other: true, run: (page, url) => page.goto(url, { waitUntil: 'networkidle' }) },
   {
     name: `load, then locator('${READY}').first().waitFor()`,
     run: async (page, url) => {
@@ -85,6 +89,7 @@ export const playwrightStrategies = [
   {
     name: "waitForPageReady({ readyGlobal: '__READY__' })",
     helper: true,
+    other: true,
     run: async (page, url) => {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       return waitForPageReady(page, { readyGlobal: '__READY__' });
@@ -93,6 +98,7 @@ export const playwrightStrategies = [
   {
     name: 'waitForPageReady() without a ready signal',
     helper: true,
+    other: true,
     run: async (page, url) => {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       return waitForPageReady(page);

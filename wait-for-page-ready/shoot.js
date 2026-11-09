@@ -1,7 +1,7 @@
 // Opens a URL with Puppeteer, waits until the page is ready, and writes a PNG
 // screenshot or a PDF file.
 //   node shoot.js <url> <file.png|file.pdf> [--ready-selector <css>] [--ready-global <name>]
-// Without a ready signal, the script waits at most 3 s for network idle.
+// Without a ready signal, the script waits at most 5 s for network idle.
 import { writeFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -27,6 +27,8 @@ const browser = await puppeteer.launch();
 try {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
+  // Pages that respect this setting skip their animations.
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   // The only hard limit: the HTML document must arrive. The other waits are soft.
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15_000 });
   const { warnings, ms } = await waitForPageReady(page, {

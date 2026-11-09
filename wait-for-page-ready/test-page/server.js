@@ -6,6 +6,7 @@
 //                            (?hang=1: never answers, like a broken image server)
 //   /api/live                a long-poll request: open for LIVE_HOLD_MS, then empty
 //   /api/events              a server-sent events stream that stays open
+//   /pixel.gif               a tracking pixel that never answers
 // Run it alone with: node test-page/server.js (port 8080, or PORT)
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -84,6 +85,8 @@ export function startTestPageServer(port = 0) {
         res.setHeader('content-type', 'text/event-stream');
         res.write('data: connected\n\n');
         return; // the stream stays open
+      case '/pixel.gif':
+        return; // no answer: the load event of the page never fires
       default:
         res.statusCode = 404;
         return res.end('Not found');

@@ -99,7 +99,7 @@ function summarize(runs) {
   return { time: `${(median / 1000).toFixed(2)} s`, capture, result, warnings, errors };
 }
 
-const results = { runs: RUNS, pdfRuns: PDF_RUNS, environment: {}, screenshots: [], eventSource: [], pdf: [] };
+const results = { runs: RUNS, pdfRuns: PDF_RUNS, environment: {}, screenshots: [], otherPages: [], pdf: [] };
 results.environment = {
   os: `${os.type()} ${os.release()} ${os.arch()}`,
   cpus: `${os.cpus().length} x ${os.cpus()[0]?.model}`,
@@ -149,10 +149,14 @@ for (const library of libraries) {
     results.screenshots.push(row);
     console.error(`${library.name}: ${strategy.name}: ${row.quiet.time} ${row.quiet.result} | ${row.longPoll.time} ${row.longPoll.result}`);
 
-    if (strategy.idle) {
-      const runs = [];
-      for (let i = 0; i < PDF_RUNS; i++) runs.push(await runOnce(library, browser, strategy, `${base}?live=sse`, screenshot));
-      results.eventSource.push({ library: library.name, strategy: strategy.name, ...summarize(runs), runs });
+    if (strategy.other) {
+      const row = { library: library.name, strategy: strategy.name };
+      for (const [key, query] of [['eventSource', '?live=sse'], ['tracker', '?tracker=1']]) {
+        const runs = [];
+        for (let i = 0; i < PDF_RUNS; i++) runs.push(await runOnce(library, browser, strategy, base + query, screenshot));
+        row[key] = { ...summarize(runs), runs };
+      }
+      results.otherPages.push(row);
     }
     if (!strategy.screenshot) {
       const runs = [];
@@ -171,15 +175,15 @@ const env = results.environment;
 const lines = [
   `Runner: ${env.os}, ${env.cpus}, Node.js ${env.node}`,
   `Puppeteer ${env.Puppeteer}; Playwright ${env.Playwright}`,
-  `Median of ${RUNS} runs for screenshots, ${PDF_RUNS} runs for EventSource and PDF. Time: page.goto() to the finished capture.`,
+  `Median of ${RUNS} runs on the quiet and long-poll pages, ${PDF_RUNS} runs on the other pages and for PDF. Time: page.goto() to the finished capture.`,
   '',
   '| Library | Wait | Quiet page: time | Quiet page: result | Long-poll page: time | Long-poll page: result |',
   '|---|---|---|---|---|---|',
   ...results.screenshots.map((r) => `| ${r.library} | \`${r.strategy}\` | ${r.quiet.time} | ${r.quiet.result} | ${r.longPoll.time} | ${r.longPoll.result} |`),
   '',
-  '| Library | Wait | EventSource page: time | Result |',
-  '|---|---|---|---|',
-  ...results.eventSource.map((r) => `| ${r.library} | \`${r.strategy}\` | ${r.time} | ${r.result} |`),
+  '| Library | Wait | EventSource page: time | EventSource page: result | Tracking pixel page: time | Tracking pixel page: result |',
+  '|---|---|---|---|---|---|',
+  ...results.otherPages.map((r) => `| ${r.library} | \`${r.strategy}\` | ${r.eventSource.time} | ${r.eventSource.result} | ${r.tracker.time} | ${r.tracker.result} |`),
   '',
   '| Library | Wait before pdf() | Time | Result |',
   '|---|---|---|---|',
@@ -191,12 +195,14 @@ const lines = [
   '',
   'Timeout errors:',
   ...[...results.screenshots.flatMap((r) => [...r.quiet.errors, ...r.longPoll.errors].map((e) => `${r.library}: ${e}`)),
-    ...results.eventSource.flatMap((r) => r.errors.map((e) => `${r.library}: ${e}`))]
+    ...results.otherPages.flatMap((r) => [...r.eventSource.errors, ...r.tracker.errors].map((e) => `${r.library}: ${e}`))]
     .filter((e, i, all) => all.indexOf(e) === i).map((e) => `- ${e}`),
   '',
   'Warnings from waitForPageReady():',
   ...results.screenshots.filter((r) => r.strategy.startsWith('waitForPageReady'))
     .map((r) => `- ${r.library}, ${r.strategy}: quiet [${r.quiet.warnings.join('; ')}], long-poll [${r.longPoll.warnings.join('; ')}]`),
+  ...results.otherPages.filter((r) => r.strategy.startsWith('waitForPageReady'))
+    .map((r) => `- ${r.library}, ${r.strategy}: EventSource [${r.eventSource.warnings.join('; ')}], tracking pixel [${r.tracker.warnings.join('; ')}]`),
 ];
 const markdown = lines.join('\n');
 console.log(markdown);

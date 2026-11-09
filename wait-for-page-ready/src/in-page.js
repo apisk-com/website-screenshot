@@ -2,15 +2,6 @@
 // browser APIs, so Puppeteer and Playwright can both send them to the page.
 // Each function is sent as text, so it cannot use helpers from this file.
 
-// Waits for the load event of the page. Returns false after timeoutMs.
-export async function waitForLoadEvent({ timeoutMs }) {
-  if (document.readyState === 'complete') return true;
-  return new Promise((resolve) => {
-    window.addEventListener('load', () => resolve(true), { once: true });
-    setTimeout(() => resolve(false), timeoutMs);
-  });
-}
-
 // Waits until the app says that its data is on the page: an element matches
 // readySelector, or window[readyGlobal] is true. Returns false after timeoutMs.
 export async function waitForReadySignal({ readySelector, readyGlobal, timeoutMs }) {
