@@ -155,8 +155,11 @@ for (const [name, withPage, capture] of libraries) {
 
 test('Puppeteer: addStyleTag() does not work under a strict Content Security Policy', async () => {
   await withPuppeteer('/csp', async (page) => {
-    // The style element is added, but Chrome does not apply it.
-    await page.addStyleTag({ content: '.banner { visibility: hidden !important; }' }).catch(() => {});
+    // Chrome blocks the style element, so Puppeteer reports that the style did not load.
+    await assert.rejects(
+      page.addStyleTag({ content: '.banner { visibility: hidden !important; }' }),
+      /Could not load style/,
+    );
     const visibility = await page.evaluate(() => getComputedStyle(document.querySelector('.banner')).visibility);
     assert.equal(visibility, 'visible');
   });
