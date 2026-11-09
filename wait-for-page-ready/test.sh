@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CI entry point: install, run the tests, run the script as the README shows,
+# Test entry point: install, run the tests, run the script as the README shows,
 # then measure each wait strategy on this runner.
 set -euo pipefail
 cd "$(dirname "$0")"

@@ -88,7 +88,7 @@ The page sets `window.__READY__ = true` when the chart and the product card are 
 | `bench/` | The benchmark: the strategies, the pixel checks and the runner |
 | `test-page/` | The test page and its server |
 | `test/` | Tests (`node --test`) |
-| `test.sh` | The script that GitHub Actions runs |
+| `test.sh` | The test script |
 
 ## Test
 
