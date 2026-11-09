@@ -2,8 +2,8 @@
 // overlays, and returns the page as one or more image tiles.
 import { markFixedElements, scrollThroughPage, waitForImages } from './in-page.js';
 
-// One capture may be at most this many device pixels high. Full Chrome repeats
-// the top of the page below 16,384 px, and WebP stops at 16,383 px.
+// One capture is at most this many device pixels high. WebP stops at 16,383 px,
+// and full Chrome on a Mac repeated the top of the page after 16,384 px.
 export const MAX_TILE_PIXELS = 16_000;
 
 export async function captureFullPage(page, {
