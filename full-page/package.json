@@ -1,0 +1,20 @@
+{
+  "name": "full-page",
+  "version": "1.0.0",
+  "description": "Full-page screenshots with Playwright and Puppeteer: lazy images, fixed overlays, tall pages",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test-page": "node test-page/server.js",
+    "limits": "node limits.js"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "playwright": "1.65.0",
+    "puppeteer": "25.16.0",
+    "sharp": "0.35.5"
+  }
+}

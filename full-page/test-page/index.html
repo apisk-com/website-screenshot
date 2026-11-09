@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full-page screenshot test page</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 18px/1.5 system-ui, sans-serif; color: #0f172a; background: #f8fafc; }
+    h1, h2 { line-height: 1.2; margin: 0 0 16px; }
+    section, footer { max-width: 1040px; margin: 0 auto; padding: 48px 24px; }
+
+    /* Trap 1: a sticky header. */
+    .site-header { position: sticky; top: 0; z-index: 10; height: 64px; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #0f172a; color: #fff; font-weight: 600; }
+
+    /* Trap 2: a hero section that is as high as the viewport. */
+    .hero { min-height: 100vh; display: grid; place-content: center; text-align: center;
+      padding: 24px; color: #fff; background: linear-gradient(160deg, #1d4ed8, #7c3aed); }
+    .hero h1 { font-size: 56px; }
+
+    /* Trap 3 and 4: lazy images. The gray box is the empty image. */
+    .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .photos img { display: block; width: 100%; height: auto; border-radius: 8px; background: #cbd5e1; }
+    .photos img.fade { opacity: 0; transition: opacity 0.6s; }
+    .photos img.fade.shown { opacity: 1; }
+
+    /* Trap 5: a very tall section. JavaScript sets its height. */
+    .tall { position: relative; border-radius: 8px;
+      background: repeating-linear-gradient(180deg, #e0f2fe 0 500px, #bae6fd 500px 1000px); }
+    .tall span { position: absolute; left: 24px; font-weight: 600; color: #0369a1; }
+
+    /* Trap 6: a feed that loads more posts at its end, without a limit. */
+    .feed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .post { height: 200px; padding: 20px; border-radius: 8px; background: #fff; border: 1px solid #cbd5e1; }
+
+    /* Trap 7 and 8: a fixed cookie banner and a fixed chat button. */
+    .cookie-banner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: 20px 24px;
+      display: flex; gap: 24px; align-items: center; justify-content: center;
+      background: #111827; color: #fff; }
+    .cookie-banner button { font: inherit; padding: 8px 20px; border: 0; border-radius: 6px; background: #facc15; }
+    .chat-button { position: fixed; right: 24px; bottom: 104px; z-index: 20; width: 72px; height: 72px;
+      border-radius: 50%; display: grid; place-content: center;
+      background: #16a34a; color: #fff; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <span>Sticky header</span>
+    <span>position: sticky; top: 0</span>
+  </header>
+
+  <div class="hero">
+    <h1>Full-page screenshot test page</h1>
+    <p>This hero has min-height: 100vh. Scroll down for the traps.</p>
+  </div>
+
+  <section>
+    <h2>A very tall section</h2>
+    <div class="tall" id="tall"></div>
+  </section>
+
+  <section>
+    <h2>Lazy images with loading="lazy"</h2>
+    <div class="photos">
+      <img loading="lazy" src="/img/1.svg" width="400" height="300" alt="Photo 1">
+      <img loading="lazy" src="/img/2.svg" width="400" height="300" alt="Photo 2">
+      <img loading="lazy" src="/img/3.svg" width="400" height="300" alt="Photo 3">
+      <img loading="lazy" src="/img/4.svg" width="400" height="300" alt="Photo 4">
+      <img loading="lazy" src="/img/5.svg" width="400" height="300" alt="Photo 5">
+      <img loading="lazy" src="/img/6.svg" width="400" height="300" alt="Photo 6">
+    </div>
+  </section>
+
+  <section>
+    <h2>Lazy images with an IntersectionObserver</h2>
+    <div class="photos">
+      <img class="lazy fade" data-src="/img/7.svg" width="400" height="300" alt="Photo 7">
+      <img class="lazy fade" data-src="/img/8.svg" width="400" height="300" alt="Photo 8">
+      <img class="lazy fade" data-src="/img/9.svg" width="400" height="300" alt="Photo 9">
+      <img class="lazy fade" data-src="/img/10.svg" width="400" height="300" alt="Photo 10">
+      <img class="lazy fade" data-src="/img/11.svg" width="400" height="300" alt="Photo 11">
+      <img class="lazy fade" data-src="/img/12.svg" width="400" height="300" alt="Photo 12">
+    </div>
+  </section>
+
+  <section>
+    <h2>A feed without an end</h2>
+    <div class="feed" id="feed"></div>
+    <div id="feed-end"></div>
+  </section>
+
+  <footer>Footer. A browser that scrolls this page never gets here.</footer>
+
+  <div class="chat-button">Chat</div>
+  <div class="cookie-banner">
+    <span>Cookie banner: position: fixed; bottom: 0</span>
+    <button type="button">Accept</button>
+  </div>
+
+  <script>
+    // Images with data-src load only when they come into the viewport.
+    const imageObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const img = entry.target;
+        img.addEventListener('load', () => img.classList.add('shown'), { once: true });
+        img.src = img.dataset.src;
+        imageObserver.unobserve(img);
+      }
+    });
+    document.querySelectorAll('img.lazy').forEach((img) => imageObserver.observe(img));
+
+    // The tall section: 20000 px by default, or ?tall=<px>.
+    const tallHeight = Number(new URLSearchParams(location.search).get('tall') ?? 20000);
+    const tall = document.getElementById('tall');
+    tall.style.height = `${tallHeight}px`;
+    for (let y = 0; y < tallHeight; y += 1000) {
+      const label = document.createElement('span');
+      label.style.top = `${y + 16}px`;
+      label.textContent = `${y.toLocaleString('en-US')} px into the tall section`;
+      tall.append(label);
+    }
+
+    // The feed adds 12 posts (864 px) each time the page scrolls near its end.
+    const feed = document.getElementById('feed');
+    const feedEnd = document.getElementById('feed-end');
+    let posts = 0;
+    function addPosts() {
+      for (let i = 0; i < 12; i++) {
+        posts++;
+        const post = document.createElement('div');
+        post.className = 'post';
+        post.textContent = `Post ${posts}`;
+        feed.append(post);
+      }
+    }
+    addPosts();
+    window.addEventListener('scroll', () => {
+      if (feedEnd.getBoundingClientRect().top < window.innerHeight + 400) addPosts();
+    }, { passive: true });
+  </script>
+</body>
+</html>
