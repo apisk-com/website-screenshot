@@ -6,9 +6,17 @@ by step.
 
 ## Examples
 
+### By language and tool
+
 | Folder | Language and tools | What it does | Tutorial |
 |---|---|---|---|
 | [nodejs-playwright](nodejs-playwright/) | Node.js, Express 5, Playwright | Screenshot API: `GET /screenshot` with viewport, scale, PNG, JPEG or WebP, full page, API key and S3 upload | [Build a Website Screenshot API with Node.js and Playwright](https://apisk.com/blog/screenshot-api-nodejs/), 17 November 2026 |
+
+### By problem
+
+| Folder | Language and tools | What it does | Tutorial |
+|---|---|---|---|
+| [full-page](full-page/) | Playwright, Puppeteer | Full-page screenshots with lazy images, sticky headers and cookie banners | [Full-Page Screenshots: Lazy Images, Sticky Headers, Banners](https://apisk.com/blog/full-page-screenshot/), 9 December 2026 |
 
 Each folder runs on its own: open its `README.md` for the commands.
 
