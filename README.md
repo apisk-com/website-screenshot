@@ -17,6 +17,7 @@ by step.
 | Folder | Language and tools | What it does | Tutorial |
 |---|---|---|---|
 | [full-page](full-page/) | Playwright, Puppeteer | Full-page screenshots with lazy images, sticky headers and cookie banners | [Full-Page Screenshots: Lazy Images, Sticky Headers, Banners](https://apisk.com/blog/full-page-screenshot/), 9 December 2026 |
+| [wait-for-page-ready](wait-for-page-ready/) | Puppeteer, Playwright | Waits for network, fonts, images and app data before a screenshot or a PDF | [Wait Until the Page Is Ready Before a Screenshot or PDF](https://apisk.com/blog/wait-for-page-ready/), 13 January 2027 |
 
 Each folder runs on its own: open its `README.md` for the commands.
 
